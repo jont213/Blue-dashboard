@@ -1,0 +1,57 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>$BLUE Debug</title>
+  <style>
+    body {
+      font-family: monospace;
+      background: black;
+      color: #00BFFF;
+      padding: 20px;
+    }
+    pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      background: #111;
+      padding: 1em;
+      border-radius: 8px;
+      color: #0ff;
+    }
+  </style>
+</head>
+<body>
+  <h2>🔍 Debugging $BLUE Market Cap</h2>
+  <div id="output"><pre>Loading...</pre></div>
+
+  <script>
+    async function fetchAndDisplay() {
+      const url = "https://api.dexscreener.com/latest/dex/pairs/base/0x03623367F4a833f23E8C917b3448DD31805E3D07";
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        const pair = data.pairs?.[0];
+        const output = document.getElementById("output").querySelector("pre");
+
+        if (pair) {
+          output.textContent = JSON.stringify({
+            fdv: pair.fdv,
+            priceUsd: pair.priceUsd,
+            liquidity: pair.liquidity,
+            pairCreatedAt: pair.pairCreatedAt,
+            baseToken: pair.baseToken,
+            quoteToken: pair.quoteToken,
+          }, null, 2);
+        } else {
+          output.textContent = "No data returned for this pair.";
+        }
+      } catch (err) {
+        document.getElementById("output").querySelector("pre").textContent = "Fetch error: " + err.message;
+      }
+    }
+
+    fetchAndDisplay();
+  </script>
+</body>
+</html>
