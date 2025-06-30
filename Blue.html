@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>$BLUE Dashboard</title>
+  <style>
+    body, html { margin:0; padding:0; overflow:hidden; background:#000; color:#fff; }
+    canvas#bg { position:fixed; top:0; left:0; z-index:0; }
+    #app { position:relative; z-index:1; display:flex; flex-direction:column;
+           align-items:center; justify-content:center; height:100vh; font-family:sans-serif; }
+    h1 { color:#0052FF; }
+    canvas#chart { background:#111; border:2px solid #0052FF; border-radius:8px; }
+    #price { font-size:24px; margin-top:10px; }
+  </style>
+</head>
+<body>
+  <canvas id="bg"></canvas>
+  <div id="app">
+    <h1>$BLUE (Uniswap V3)</h1>
+    <canvas id="chart" width="800" height="400"></canvas>
+    <p id="price"></p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const bg = document.getElementById('bg'), ctx = bg.getContext('2d');
+    let size = 16, drops = [];
+    function initBG(){
+      bg.width = window.innerWidth;
+      bg.height = window.innerHeight;
+      drops = Array(Math.floor(bg.width/size)).fill(1);
+    }
+    function drawBG(){
+      ctx.fillStyle = 'rgba(0,0,0,0.05)';
+      ctx.fillRect(0, 0, bg.width, bg.height);
+      ctx.fillStyle = '#0F0';
+      drops.forEach((d, i) => {
+        const text = String.fromCharCode(0x30A0 + Math.random() * 96);
+        ctx.fillText(text, i * size, d * size);
+        if (d * size > bg.height || Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+      });
+      requestAnimationFrame(drawBG);
+    }
+    window.addEventListener('resize', initBG);
+    initBG();
+    drawBG();
+
+    const ctxChart = document.getElementById('chart').getContext('2d');
+    const priceTxt = document.getElementById('price');
+    const chart = new Chart(ctxChart, {
+      type: 'line',
+      data: { labels: [], datasets: [{ label: '$BLUE (USD)', data: [], borderColor: '#0052FF', fill: false }] },
+      options: { scales: { x: { type: 'time', time: { unit: 'minute' } } }, animation: false }
+    });
+
+    async function update(){
+      try {
+        const res = await fetch('https://api.dexscreener.com/latest/dex/pairs/base/0x03623367F4a833f23E8C917b3448DD31805E3D07');
+        const pair = (await res.json()).pairs[0];
+        const t = Date.now(), p = parseFloat(pair.priceUsd);
+        chart.data.labels.push(t);
+        chart.data.datasets[0].data.push(p);
+        if (chart.data.labels.length > 60){
+          chart.data.labels.shift();
+          chart.data.datasets[0].data.shift();
+        }
+        chart.update();
+        priceTxt.textContent = `Price: $${p.toFixed(6)} (${parseFloat(pair.priceNative).toFixed(6)} BASE)`;
+      } catch(e) {
+        console.error(e);
+      }
+    }
+    setInterval(update, 5000);
+    update();
+  </script>
+</body>
+</html>
