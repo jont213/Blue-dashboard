@@ -107,12 +107,13 @@
   </section>
 <hr>
 <section>
-<div id="top-buys">
-    <h2>💸 Top 10 Buys</h2>
-    <div id="wallet-list">Loading...</div>
+<!-- Removed Top 10 Buys -->
+    
+    
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Removed Top 10 Buys Script -->
   <script>
     const capEl = document.getElementById('cap');
     const walletList = document.getElementById('wallet-list');
@@ -318,6 +319,90 @@
     document.getElementById('wave-fill').textContent = Math.round(progress) + '%';
     document.getElementById('wave-status').textContent = `$${current.toLocaleString()} → $${nextTarget.toLocaleString()}`;
   }
+</script>
+
+
+<hr>
+<section>
+  <div id="blue-whale" style="margin-top: 30px;">
+    <h2>🐋 BLUE WHALE WATCH</h2>
+    <div id="whale-info" style="font-size: 1.2em; color: #00FFEF;">Scanning wallets...</div>
+  </div>
+</section>
+
+<script>
+  async function fetchBlueWhale() {
+    try {
+      const res = await fetch('https://api.dexscreener.com/latest/dex/pairs/base/0x03623367F4a833f23E8C917b3448DD31805E3D07');
+      const data = await res.json();
+      const txs = data.pairs?.[0]?.txs;
+
+      if (!txs || txs.length === 0) {
+        document.getElementById('whale-info').textContent = "No recent buys detected.";
+        return;
+      }
+
+      const biggestBuy = txs
+        .filter(tx => tx.side === 'buy')
+        .sort((a, b) => parseFloat(b.priceUsd) - parseFloat(a.priceUsd))[0];
+
+      if (!biggestBuy) {
+        document.getElementById('whale-info').textContent = "No buys found.";
+        return;
+      }
+
+      const shortWallet = biggestBuy.from.slice(0, 6) + "..." + biggestBuy.from.slice(-4);
+      const buyAmount = "$" + parseFloat(biggestBuy.priceUsd).toLocaleString();
+      const link = `https://basescan.org/address/${biggestBuy.from}`;
+
+      document.getElementById('whale-info').innerHTML = `🐳 <a href="${link}" target="_blank">${shortWallet}</a> bought <b>${buyAmount}</b> worth of $BLUE`;
+    } catch (e) {
+      document.getElementById('whale-info').textContent = "Error loading whale data.";
+    }
+  }
+
+  fetchBlueWhale();
+  setInterval(fetchBlueWhale, 30000);
+</script>
+
+
+<hr>
+<section>
+  <div id="base-scanner" style="margin-top: 40px;">
+    <h2>📡 BASE CHAIN SCANNER</h2>
+    <div id="base-stats" style="font-size: 1.2em; line-height: 1.6em; color: #00FFEF;">
+      Loading Base network stats...
+    </div>
+  </div>
+</section>
+
+<script>
+  async function fetchBaseStats() {
+    try {
+      const response = await fetch('https://api.llama.fi/protocols');
+      const data = await response.json();
+
+      const baseProtocol = data.find(p => p.name.toLowerCase() === 'base');
+      if (!baseProtocol) {
+        document.getElementById('base-stats').textContent = "Base chain stats unavailable.";
+        return;
+      }
+
+      const txs = baseProtocol?.numberOfUsers || "N/A";
+      const tvl = baseProtocol?.tvl ? "$" + Math.round(baseProtocol.tvl).toLocaleString() : "N/A";
+      const statsHTML = `
+        📊 Total Users: ${txs}<br>
+        💰 TVL: ${tvl}<br>
+        ⚙️ Activity: Alive and scaling 🚀
+      `;
+      document.getElementById('base-stats').innerHTML = statsHTML;
+    } catch (e) {
+      document.getElementById('base-stats').textContent = "Error loading Base stats.";
+    }
+  }
+
+  fetchBaseStats();
+  setInterval(fetchBaseStats, 60000);
 </script>
 
 </body>
