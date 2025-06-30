@@ -4,49 +4,90 @@
   <meta charset="UTF-8" />
   <title>$BLUE Market Cap</title>
   <style>
+    @keyframes glow {
+      0% { text-shadow: 0 0 5px #00f, 0 0 10px #00f, 0 0 20px #0ff; }
+      50% { text-shadow: 0 0 20px #0ff, 0 0 30px #00f, 0 0 40px #0ff; }
+      100% { text-shadow: 0 0 5px #00f, 0 0 10px #00f, 0 0 20px #0ff; }
+    }
+
     body, html {
       margin: 0; padding: 0; background: #000; overflow: hidden;
       color: #00f; font-family: 'Courier New', monospace;
     }
+
     canvas#bg {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;
     }
+
     #app {
       position: relative; z-index: 1;
       display: flex; flex-direction: column; align-items: center;
       justify-content: center; height: 100vh; text-align: center;
       padding: 2em; box-sizing: border-box;
     }
+
     h1 {
-      font-size: 4em; margin-bottom: 30px; color: #0052FF;
-      text-shadow: 0 0 10px #0052FF, 0 0 20px #00f, 0 0 40px #0052FF;
+      font-size: 4em; margin-bottom: 20px; color: #FFD700;
+      text-shadow: 0 0 10px #FFD700, 0 0 20px #FFA500;
+      font-weight: bold;
+      animation: glow 2s infinite;
     }
+
     #countdown {
       font-size: 5em; letter-spacing: 0.1em; color: #00f;
-      text-shadow: 0 0 5px #00f, 0 0 15px #00f, 0 0 30px #0052FF;
-      transition: transform 0.3s ease-in-out;
+      animation: glow 2s infinite;
     }
+
     #countdown.pulse {
       transform: scale(1.05);
     }
-    #chartContainer {
-      margin-top: 20px;
+
+    #dice {
+      font-size: 3em;
+      margin: 20px;
+      animation: pulse 1s infinite alternate;
     }
-    #sparkline {
-      width: 300px;
-      height: 100px;
+
+    @keyframes pulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.1); }
+    }
+
+    button {
+      font-size: 1.5em;
+      margin-top: 20px;
+      padding: 0.5em 1em;
+      background: #111;
+      border: 2px solid #00f;
+      color: #0ff;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #222;
+    }
+
+    #result {
+      font-size: 1.2em;
+      margin-top: 10px;
+      color: #FFD700;
+      animation: glow 1.5s infinite;
     }
   </style>
 </head>
 <body>
   <canvas id="bg"></canvas>
   <div id="app">
-    <h1>$BLUE MARKET CAP</h1>
+    <h1>$BLUE CASINO</h1>
     <div id="countdown">Loading...</div>
-    <div id="chartContainer">
-      <canvas id="sparkline"></canvas>
-    </div>
+    <div id="dice">🎲🎲</div>
+    <button onclick="rollDice()">ROLL THE DICE</button>
+    <div id="result"></div>
   </div>
+
+  <audio id="winSound" src="https://freesound.org/data/previews/341/341695_5260877-lq.mp3"></audio>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
@@ -90,33 +131,7 @@
 
     const capDisplay = document.getElementById('countdown');
     const TOTAL_SUPPLY = 1000000000;
-    let priceHistory = [];
-
-    const chartCtx = document.getElementById('sparkline').getContext('2d');
-    const priceChart = new Chart(chartCtx, {
-      type: 'line',
-      data: {
-        labels: [],
-        datasets: [{
-          label: 'Price',
-          data: [],
-          borderColor: '#00f',
-          borderWidth: 2,
-          fill: false,
-          pointRadius: 0,
-          tension: 0.3,
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { display: false },
-          y: { display: false }
-        }
-      }
-    });
+    let lastCap = 0;
 
     async function updateMarketCap() {
       const url = 'https://api.dexscreener.com/latest/dex/pairs/base/0x03623367F4a833f23E8C917b3448DD31805E3D07';
@@ -130,14 +145,10 @@
           capDisplay.classList.add('pulse');
           setTimeout(() => capDisplay.classList.remove('pulse'), 300);
 
-          const now = new Date().toLocaleTimeString();
-          priceHistory.push({ time: now, value: price });
-
-          if (priceHistory.length > 30) priceHistory.shift();
-
-          priceChart.data.labels = priceHistory.map(p => p.time);
-          priceChart.data.datasets[0].data = priceHistory.map(p => p.value);
-          priceChart.update();
+          if (marketCap > lastCap) {
+            document.getElementById("winSound").play();
+          }
+          lastCap = marketCap;
         } else {
           capDisplay.textContent = "Price not available";
         }
@@ -148,6 +159,20 @@
 
     setInterval(updateMarketCap, 10000);
     updateMarketCap();
+
+    function rollDice() {
+      const outcomes = [
+        "You WIN 2x your bet!",
+        "Try again 😅",
+        "You hit the jackpot! 🎉",
+        "Almost had it...",
+        "ROLL FAILED — Rugged 😭",
+        "Lucky 7s! $BLUE for the win!",
+        "You pulled a 420x!! (jk... or is it?)"
+      ];
+      const result = outcomes[Math.floor(Math.random() * outcomes.length)];
+      document.getElementById("result").textContent = result;
+    }
   </script>
 </body>
 </html>
