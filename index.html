@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>$BLUE Market Cap (Visible Logs)</title>
+  <title>$BLUE Market Cap (DexScreener)</title>
   <style>
     body, html { margin:0; padding:0; background:#000; overflow:hidden; color:#00f; font-family: monospace; }
     canvas#bg { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; }
@@ -11,13 +11,14 @@
     h1 { font-size:2.5em; margin-bottom:20px; }
     #countdown { font-size:3em; letter-spacing:0.1em; color:#00f; }
     #label { font-size:1.2em; margin:10px 0; color:#ccc; }
-    #logbox { font-size:0.9em; color:#0f0; background:#111; padding:1em; border-radius:8px; width:100%; max-width:700px; overflow:auto; max-height:250px; text-align:left; }
+    #logbox { font-size:0.9em; color:#0f0; background:#111; padding:1em; border-radius:8px;
+              width:100%; max-width:700px; overflow:auto; max-height:250px; text-align:left; }
   </style>
 </head>
 <body>
   <canvas id="bg"></canvas>
   <div id="app">
-    <h1>$BLUE MARKET CAP (Live Debug)</h1>
+    <h1>$BLUE MARKET CAP (LIVE)</h1>
     <div id="countdown">Loading...</div>
     <div id="label">Log Output:</div>
     <pre id="logbox">Waiting for update...</pre>
@@ -68,26 +69,28 @@
     setupMatrix();
     drawMatrix();
 
-    // Market Cap Display
     const capDisplay = document.getElementById('countdown');
+    const TOTAL_SUPPLY = 1000000000;
 
     async function updateMarketCap() {
-      const url = 'https://api.coingecko.com/api/v3/coins/base/contract/0x03623367F4a833f23E8C917b3448DD31805E3D07/market_chart/?vs_currency=usd&days=1';
+      const url = 'https://api.dexscreener.com/latest/dex/pairs/base/0x03623367F4a833f23E8C917b3448DD31805E3D07';
       try {
         log("Fetching: " + url);
         const res = await fetch(url);
         log("Status: " + res.status);
         const data = await res.json();
-        log("Response received");
-        if (data.market_caps && data.market_caps.length > 0) {
-          const latest = data.market_caps[data.market_caps.length - 1][1];
-          log("Latest Market Cap: $" + latest);
-          capDisplay.textContent = "$" + Math.round(latest).toLocaleString();
+        const price = parseFloat(data.pairs?.[0]?.priceUsd);
+        if (!isNaN(price)) {
+          const marketCap = price * TOTAL_SUPPLY;
+          log("Price: $" + price.toFixed(8));
+          log("Market Cap: $" + Math.round(marketCap).toLocaleString());
+          capDisplay.textContent = "$" + Math.round(marketCap).toLocaleString();
         } else {
-          log("Warning: Market cap data is missing or empty.");
-          capDisplay.textContent = "Data not available";
+          capDisplay.textContent = "Price not available";
+          log("Error: Price data is missing or invalid.");
         }
       } catch (err) {
+        console.error(err);
         log("Error: " + err.message);
         capDisplay.textContent = "Error loading data";
       }
