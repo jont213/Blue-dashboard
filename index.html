@@ -2,23 +2,23 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>$BLUE Market Cap Countdown</title>
+  <title>$BLUE Market Cap Debug</title>
   <style>
-    body, html { margin:0; padding:0; background:#000; overflow:hidden; color:#0052FF; font-family: monospace; }
+    body, html { margin:0; padding:0; background:#000; overflow:hidden; color:#00f; font-family: monospace; }
     canvas#bg { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; }
     #app { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center;
            justify-content:center; height:100vh; text-align:center; }
-    h1 { font-size:3em; margin-bottom:20px; }
-    #countdown { font-size:4em; letter-spacing:0.1em; color:#0052FF; }
-    #label { font-size:1.5em; margin-top:10px; }
+    h1 { font-size:2.5em; margin-bottom:20px; }
+    #countdown { font-size:3em; letter-spacing:0.1em; color:#00f; }
+    #label { font-size:1.2em; margin-top:10px; color:#ccc; }
   </style>
 </head>
 <body>
   <canvas id="bg"></canvas>
   <div id="app">
-    <h1>$BLUE MARKET CAP</h1>
+    <h1>$BLUE MARKET CAP (Debug Mode)</h1>
     <div id="countdown">Loading...</div>
-    <div id="label">(Real-Time from CoinGecko)</div>
+    <div id="label">Check console for logs (F12)</div>
   </div>
 
   <script>
@@ -41,7 +41,7 @@
     function drawMatrix() {
       ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
       ctx.fillRect(0, 0, width, height);
-      ctx.fillStyle = '#0052FF';
+      ctx.fillStyle = '#00f';
       ctx.font = fontSize + "px monospace";
       for (let i = 0; i < drops.length; i++) {
         const text = Math.floor(Math.random() * 10);
@@ -61,23 +61,29 @@
     setupMatrix();
     drawMatrix();
 
-    // Countdown logic using CoinGecko market_chart
+    // Countdown logic using CoinGecko market_chart with debug logs
     const capDisplay = document.getElementById('countdown');
 
     async function updateMarketCap() {
       try {
         const url = 'https://api.coingecko.com/api/v3/coins/base/contract/0x03623367F4a833f23E8C917b3448DD31805E3D07/market_chart/?vs_currency=usd&days=1';
+        console.log("Fetching market cap data from:", url);
         const res = await fetch(url);
+        console.log("Response status:", res.status);
         const data = await res.json();
+        console.log("Full response data:", data);
+
         const marketCaps = data.market_caps;
         if (marketCaps && marketCaps.length > 0) {
-          const latest = marketCaps[marketCaps.length - 1][1]; // second item in the last array = market cap
+          const latest = marketCaps[marketCaps.length - 1][1];
+          console.log("Latest market cap value:", latest);
           capDisplay.textContent = "$" + Math.round(latest).toLocaleString();
         } else {
+          console.warn("Market cap array is missing or empty.");
           capDisplay.textContent = "Data not available";
         }
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching/parsing market cap:", err);
         capDisplay.textContent = "Error loading data";
       }
     }
