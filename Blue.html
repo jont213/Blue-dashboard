@@ -1,78 +1,136 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>$BLUE Dashboard</title>
+  <meta charset="UTF-8" />
+  <title>$BLUE Live Dashboard</title>
   <style>
-    body, html { margin:0; padding:0; overflow:hidden; background:#000; color:#fff; }
-    canvas#bg { position:fixed; top:0; left:0; z-index:0; }
-    #app { position:relative; z-index:1; display:flex; flex-direction:column;
-           align-items:center; justify-content:center; height:100vh; font-family:sans-serif; }
-    h1 { color:#0052FF; }
-    canvas#chart { background:#111; border:2px solid #0052FF; border-radius:8px; }
-    #price { font-size:24px; margin-top:10px; }
+    body {
+      margin: 0;
+      background-color: black;
+      color: #00BFFF;
+      font-family: 'Courier New', monospace;
+      overflow: hidden;
+      text-align: center;
+    }
+    h1 {
+      margin-top: 20px;
+      font-size: 2em;
+      text-shadow: 0 0 10px #00BFFF, 0 0 20px #00BFFF;
+    }
+    #cap {
+      font-size: 1.5em;
+      margin: 10px 0;
+      color: #00FFEF;
+      text-shadow: 0 0 5px #00FFEF;
+    }
+    canvas {
+      width: 90%;
+      height: 150px;
+      margin-top: 10px;
+    }
+    #matrix {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: -1;
+    }
   </style>
 </head>
 <body>
-  <canvas id="bg"></canvas>
-  <div id="app">
-    <h1>$BLUE (Uniswap V3)</h1>
-    <canvas id="chart" width="800" height="400"></canvas>
-    <p id="price"></p>
-  </div>
+  <canvas id="matrix"></canvas>
+  <h1>$BLUE MARKET CAP</h1>
+  <div id="cap">Loading...</div>
+  <canvas id="chart"></canvas>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    const bg = document.getElementById('bg'), ctx = bg.getContext('2d');
-    let size = 16, drops = [];
-    function initBG(){
-      bg.width = window.innerWidth;
-      bg.height = window.innerHeight;
-      drops = Array(Math.floor(bg.width/size)).fill(1);
-    }
-    function drawBG(){
-      ctx.fillStyle = 'rgba(0,0,0,0.05)';
-      ctx.fillRect(0, 0, bg.width, bg.height);
-      ctx.fillStyle = '#0F0';
-      drops.forEach((d, i) => {
-        const text = String.fromCharCode(0x30A0 + Math.random() * 96);
-        ctx.fillText(text, i * size, d * size);
-        if (d * size > bg.height || Math.random() > 0.975) drops[i] = 0;
-        drops[i]++;
-      });
-      requestAnimationFrame(drawBG);
-    }
-    window.addEventListener('resize', initBG);
-    initBG();
-    drawBG();
+    const capEl = document.getElementById('cap');
+    let priceHistory = [];
 
-    const ctxChart = document.getElementById('chart').getContext('2d');
-    const priceTxt = document.getElementById('price');
-    const chart = new Chart(ctxChart, {
+    const ctx = document.getElementById('chart').getContext('2d');
+    const chart = new Chart(ctx, {
       type: 'line',
-      data: { labels: [], datasets: [{ label: '$BLUE (USD)', data: [], borderColor: '#0052FF', fill: false }] },
-      options: { scales: { x: { type: 'time', time: { unit: 'minute' } } }, animation: false }
+      data: {
+        labels: [],
+        datasets: [{
+          data: [],
+          borderColor: '#00BFFF',
+          fill: false,
+          pointRadius: 0,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { display: false },
+          y: { display: false }
+        }
+      }
     });
 
-    async function update(){
+    async function fetchMarketCap() {
       try {
         const res = await fetch('https://api.dexscreener.com/latest/dex/pairs/base/0x03623367F4a833f23E8C917b3448DD31805E3D07');
-        const pair = (await res.json()).pairs[0];
-        const t = Date.now(), p = parseFloat(pair.priceUsd);
-        chart.data.labels.push(t);
-        chart.data.datasets[0].data.push(p);
-        if (chart.data.labels.length > 60){
-          chart.data.labels.shift();
-          chart.data.datasets[0].data.shift();
+        const data = await res.json();
+        const pair = data.pairs?.[0];
+        const fdv = parseFloat(pair?.fdv);
+        if (!isNaN(fdv)) {
+          capEl.textContent = "$" + Math.round(fdv).toLocaleString();
+
+          const price = parseFloat(pair?.priceUsd);
+          const now = new Date().toLocaleTimeString();
+          if (!isNaN(price)) {
+            priceHistory.push({ time: now, value: price });
+            if (priceHistory.length > 30) priceHistory.shift();
+
+            chart.data.labels = priceHistory.map(p => p.time);
+            chart.data.datasets[0].data = priceHistory.map(p => p.value);
+            chart.update();
+          }
+        } else {
+          capEl.textContent = "FDV not available";
         }
-        chart.update();
-        priceTxt.textContent = `Price: $${p.toFixed(6)} (${parseFloat(pair.priceNative).toFixed(6)} BASE)`;
-      } catch(e) {
-        console.error(e);
+      } catch (e) {
+        capEl.textContent = "Error loading data";
       }
     }
-    setInterval(update, 5000);
-    update();
+
+    fetchMarketCap();
+    setInterval(fetchMarketCap, 10000);
+
+    // MATRIX EFFECT
+    const canvas = document.getElementById("matrix");
+    const ctxMatrix = canvas.getContext("2d");
+    canvas.height = window.innerHeight;
+    canvas.width = window.innerWidth;
+
+    const letters = "01";
+    const fontSize = 14;
+    const columns = canvas.width / fontSize;
+    const drops = Array.from({ length: columns }).fill(1);
+
+    function drawMatrix() {
+      ctxMatrix.fillStyle = "rgba(0, 0, 0, 0.05)";
+      ctxMatrix.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctxMatrix.fillStyle = "#00BFFF";
+      ctxMatrix.font = fontSize + "px monospace";
+
+      for (let i = 0; i < drops.length; i++) {
+        const text = letters[Math.floor(Math.random() * letters.length)];
+        ctxMatrix.fillText(text, i * fontSize, drops[i] * fontSize);
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+    }
+
+    setInterval(drawMatrix, 33);
   </script>
 </body>
 </html>
