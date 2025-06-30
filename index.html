@@ -29,6 +29,13 @@
     #countdown.pulse {
       transform: scale(1.05);
     }
+    #chartContainer {
+      margin-top: 20px;
+    }
+    #sparkline {
+      width: 300px;
+      height: 100px;
+    }
   </style>
 </head>
 <body>
@@ -36,8 +43,12 @@
   <div id="app">
     <h1>$BLUE MARKET CAP</h1>
     <div id="countdown">Loading...</div>
+    <div id="chartContainer">
+      <canvas id="sparkline"></canvas>
+    </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     // Matrix background
     const canvas = document.getElementById('bg');
@@ -79,6 +90,33 @@
 
     const capDisplay = document.getElementById('countdown');
     const TOTAL_SUPPLY = 1000000000;
+    let priceHistory = [];
+
+    const chartCtx = document.getElementById('sparkline').getContext('2d');
+    const priceChart = new Chart(chartCtx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Price',
+          data: [],
+          borderColor: '#00f',
+          borderWidth: 2,
+          fill: false,
+          pointRadius: 0,
+          tension: 0.3,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { display: false },
+          y: { display: false }
+        }
+      }
+    });
 
     async function updateMarketCap() {
       const url = 'https://api.dexscreener.com/latest/dex/pairs/base/0x03623367F4a833f23E8C917b3448DD31805E3D07';
@@ -91,6 +129,15 @@
           capDisplay.textContent = "$" + Math.round(marketCap).toLocaleString();
           capDisplay.classList.add('pulse');
           setTimeout(() => capDisplay.classList.remove('pulse'), 300);
+
+          const now = new Date().toLocaleTimeString();
+          priceHistory.push({ time: now, value: price });
+
+          if (priceHistory.length > 30) priceHistory.shift();
+
+          priceChart.data.labels = priceHistory.map(p => p.time);
+          priceChart.data.datasets[0].data = priceHistory.map(p => p.value);
+          priceChart.update();
         } else {
           capDisplay.textContent = "Price not available";
         }
