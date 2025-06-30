@@ -24,19 +24,22 @@
       color: #00FFEF;
       text-shadow: 0 0 5px #00FFEF;
     }
-    #top-buys {
-      margin-top: 30px;
-      color: #00FFEF;
-      font-size: 1em;
-      text-align: center;
+    #oracle {
+      font-size: 1.2em;
+      margin-top: 20px;
+      color: #00BFFF;
+      text-shadow: 0 0 8px #00BFFF;
     }
-    .wallet-entry {
-      margin: 5px 0;
+    #pressure {
+      margin: 20px auto;
+      width: 90%;
+      max-width: 400px;
+      padding: 10px;
+      border: 2px solid #00BFFF;
+      border-radius: 10px;
       font-size: 1.1em;
+      box-shadow: 0 0 10px #00BFFF;
     }
-    .rank-1 { color: gold; }
-    .rank-2 { color: silver; }
-    .rank-3 { color: #cd7f32; }
     #chart-container {
       width: 90%;
       max-width: 600px;
@@ -47,15 +50,23 @@
       width: 100% !important;
       height: 100% !important;
     }
+    #top-buys {
+      margin-top: 30px;
+    }
+    .wallet-entry {
+      margin: 5px 0;
+      font-size: 1.1em;
+    }
+    .rank-1 { color: gold; }
+    .rank-2 { color: silver; }
+    .rank-3 { color: #cd7f32; }
     #matrix {
       position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       z-index: -1;
-    }
-    a {
-      color: #00BFFF;
-      text-decoration: none;
     }
   </style>
 </head>
@@ -63,9 +74,11 @@
   <canvas id="matrix"></canvas>
   <h1>$BLUE CASINO</h1>
   <div id="cap">Loading Market Cap...</div>
-  <div id="chart-container">
-    <canvas id="chart"></canvas>
-  </div>
+
+  <div id="oracle">✨ Blue Oracle says: "<span id='fortune'>...</span>"</div>
+  <div id="pressure">Buy Pressure: <span id="pressure-value">Loading...</span></div>
+
+  <div id="chart-container"><canvas id="chart"></canvas></div>
 
   <div id="top-buys">
     <h2>💸 Top 10 Buys</h2>
@@ -76,7 +89,23 @@
   <script>
     const capEl = document.getElementById('cap');
     const walletList = document.getElementById('wallet-list');
+    const pressureVal = document.getElementById('pressure-value');
+    const fortuneEl = document.getElementById('fortune');
     let priceHistory = [];
+
+    const fortunes = [
+      "BUY. DELETE APP. TOUCH GRASS.",
+      "BASE NEVER SLEEPS.",
+      "BLUE OR RED. THE MATRIX DECIDES.",
+      "BUY AND PRETEND YOU DIDN’T.",
+      "YOU’RE EARLY. AGAIN.",
+      "MINT OR ROT.",
+      "BURNED GAS, BURNED DOUBT.",
+      "BLUE KEEPS YOU WARM.",
+      "THE CANDLE IS ALIVE.",
+      "WAGMI (BUT FOR REAL THIS TIME)"
+    ];
+    fortuneEl.textContent = fortunes[Math.floor(Math.random() * fortunes.length)];
 
     const ctx = document.getElementById('chart').getContext('2d');
     const chart = new Chart(ctx, {
@@ -127,7 +156,7 @@
       }
     }
 
-    async function fetchTopBuys() {
+    async function fetchTopBuysAndPressure() {
       try {
         const res = await fetch('https://api.dexscreener.com/latest/dex/pairs/base/0x03623367F4a833f23E8C917b3448DD31805E3D07');
         const data = await res.json();
@@ -135,14 +164,15 @@
 
         if (!txs || !Array.isArray(txs) || txs.length === 0) {
           walletList.textContent = "No wallet transaction data available.";
+          pressureVal.textContent = "No Data";
           return;
         }
 
         const buys = txs.filter(tx => tx.side === 'buy');
-        if (buys.length === 0) {
-          walletList.textContent = "No buy transactions yet.";
-          return;
-        }
+        const sells = txs.filter(tx => tx.side === 'sell');
+        const ratio = buys.length / (sells.length || 1);
+        const emoji = ratio > 1.5 ? "🚀" : ratio > 1 ? "📈" : ratio < 0.5 ? "📉" : "⚖️";
+        pressureVal.textContent = `${buys.length} buys / ${sells.length} sells ${emoji}`;
 
         const topBuys = buys
           .map(tx => ({
@@ -155,21 +185,21 @@
         walletList.innerHTML = topBuys.map((entry, i) => {
           const shortAddr = entry.wallet.slice(0, 6) + "..." + entry.wallet.slice(-4);
           const usd = "$" + Math.round(entry.usd).toLocaleString();
-          const rankClass = i === 0 ? "rank-1" : i === 1 ? "rank-2" : i === 2 ? "rank-3" : "";
           const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "💰";
           const baseScan = `https://basescan.org/address/${entry.wallet}`;
-          return `<div class="wallet-entry ${rankClass}">${medal} <a href="${baseScan}" target="_blank">${shortAddr}</a> → ${usd}</div>`;
+          return `<div class="wallet-entry">${medal} <a href="${baseScan}" target="_blank">${shortAddr}</a> → ${usd}</div>`;
         }).join("");
 
       } catch (e) {
         walletList.textContent = "Error loading wallet data.";
+        pressureVal.textContent = "Error";
       }
     }
 
     fetchMarketData();
-    fetchTopBuys();
+    fetchTopBuysAndPressure();
     setInterval(fetchMarketData, 10000);
-    setInterval(fetchTopBuys, 30000);
+    setInterval(fetchTopBuysAndPressure, 30000);
 
     const canvas = document.getElementById("matrix");
     const ctxMatrix = canvas.getContext("2d");
