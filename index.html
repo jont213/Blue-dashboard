@@ -5,6 +5,33 @@
   <meta charset="UTF-8" />
   <title>$BLUE Casino Dashboard</title>
   <style>
+    html, body {
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+    h2 {
+      text-shadow: 0 0 8px #00BFFF;
+    }
+    button:hover {
+      background-color: #008CBA;
+    }
+    @media (max-width: 600px) {
+      h1 { font-size: 1.5em; }
+      #cap, #pressure, .wallet-entry, #slot-message { font-size: 1em; }
+      button { font-size: 0.9em; padding: 8px 16px; }
+    }
+    hr {
+      border: 0;
+      height: 1px;
+      background: #00BFFF;
+      margin: 40px auto;
+      width: 80%;
+      box-shadow: 0 0 5px #00BFFF;
+    }
+    section {
+      margin-top: 40px;
+    }
+    
     body {
       margin: 0;
       background-color: black;
@@ -23,12 +50,6 @@
       margin: 10px 0;
       color: #00FFEF;
       text-shadow: 0 0 5px #00FFEF;
-    }
-    #oracle {
-      font-size: 1.2em;
-      margin-top: 20px;
-      color: #00BFFF;
-      text-shadow: 0 0 8px #00BFFF;
     }
     #pressure {
       margin: 20px auto;
@@ -74,13 +95,19 @@
   <canvas id="matrix"></canvas>
   <h1>$BLUE CASINO</h1>
   <div id="cap">Loading Market Cap...</div>
+  <hr>
+<section>
+<div id="pressure">Buy Pressure: <span id="pressure-value">Loading...</span></div>
 
-  <div id="oracle">✨ Blue Oracle says: "<span id='fortune'>...</span>"</div>
-  <div id="pressure">Buy Pressure: <span id="pressure-value">Loading...</span></div>
+  </section>
+<hr>
+<section>
+<div id="chart-container"><canvas id="chart"></canvas></div>
 
-  <div id="chart-container"><canvas id="chart"></canvas></div>
-
-  <div id="top-buys">
+  </section>
+<hr>
+<section>
+<div id="top-buys">
     <h2>💸 Top 10 Buys</h2>
     <div id="wallet-list">Loading...</div>
   </div>
@@ -90,22 +117,7 @@
     const capEl = document.getElementById('cap');
     const walletList = document.getElementById('wallet-list');
     const pressureVal = document.getElementById('pressure-value');
-    const fortuneEl = document.getElementById('fortune');
     let priceHistory = [];
-
-    const fortunes = [
-      "BUY. DELETE APP. TOUCH GRASS.",
-      "BASE NEVER SLEEPS.",
-      "BLUE OR RED. THE MATRIX DECIDES.",
-      "BUY AND PRETEND YOU DIDN’T.",
-      "YOU’RE EARLY. AGAIN.",
-      "MINT OR ROT.",
-      "BURNED GAS, BURNED DOUBT.",
-      "BLUE KEEPS YOU WARM.",
-      "THE CANDLE IS ALIVE.",
-      "WAGMI (BUT FOR REAL THIS TIME)"
-    ];
-    fortuneEl.textContent = fortunes[Math.floor(Math.random() * fortunes.length)];
 
     const ctx = document.getElementById('chart').getContext('2d');
     const chart = new Chart(ctx, {
@@ -139,6 +151,7 @@
         const fdv = parseFloat(pair?.fdv);
         if (!isNaN(fdv)) {
           capEl.textContent = "$" + Math.round(fdv).toLocaleString();
+      updateWaveMeter(fdv);
 
           const price = parseFloat(pair?.priceUsd);
           const now = new Date().toLocaleTimeString();
@@ -229,5 +242,83 @@
 
     setInterval(drawMatrix, 33);
   </script>
+
+</section>
+<hr>
+<section>
+<div id="dice-game" style="margin-top: 40px;">
+  <h2>🎲 Roll the BLUE Dice</h2>
+  <button onclick="rollDice()" style="padding: 10px 20px; font-size: 1em; background-color: #00BFFF; color: black; border: none; border-radius: 5px; cursor: pointer;">
+    Roll Dice
+  </button>
+  <div id="dice-result" style="font-size: 1.5em; margin-top: 10px;">🎲🎲</div>
+</div>
+
+<script>
+  function rollDice() {
+    const die1 = Math.floor(Math.random() * 6) + 1;
+    const die2 = Math.floor(Math.random() * 6) + 1;
+    const total = die1 + die2;
+    const emojis = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+    document.getElementById('dice-result').innerHTML = emojis[die1 - 1] + " + " + emojis[die2 - 1] + " = <b>" + total + "</b>";
+  }
+</script>
+
+
+</section>
+<hr>
+<section>
+<div id="slot-machine" style="margin-top: 50px;">
+  <h2>🪩 $BLUE Slot Machine</h2>
+  <button onclick="pullSlot()" style="padding: 10px 20px; font-size: 1em; background-color: #00BFFF; color: black; border: none; border-radius: 5px; cursor: pointer;">
+    Pull Lever
+  </button>
+  <div id="slot-result" style="font-size: 2em; margin-top: 15px;">🔵🔵🔵</div>
+  <div id="slot-message" style="margin-top: 10px; font-size: 1.2em;"></div>
+</div>
+
+<script>
+  function pullSlot() {
+    const symbols = ['🔵', '💎', '💰', '🚀', '🔥', '🌊'];
+    const spin = [
+      symbols[Math.floor(Math.random() * symbols.length)],
+      symbols[Math.floor(Math.random() * symbols.length)],
+      symbols[Math.floor(Math.random() * symbols.length)]
+    ];
+    document.getElementById('slot-result').innerHTML = spin.join('');
+    if (spin[0] === spin[1] && spin[1] === spin[2]) {
+      document.getElementById('slot-message').textContent = "🎉 JACKPOT! YOU'RE FEELING $BLUE!";
+    } else {
+      document.getElementById('slot-message').textContent = "Try again, degen.";
+    }
+  }
+</script>
+
+
+</section>
+<hr>
+<section>
+<div id="wave-meter" style="margin-top: 50px;">
+  <h2>🌊 $BLUE Wave Meter</h2>
+  <div id="wave-status" style="font-size: 1.3em; margin: 10px 0;">Loading...</div>
+  <div style="background: #333; border-radius: 10px; overflow: hidden; width: 90%; max-width: 500px; margin: auto;">
+    <div id="wave-fill" style="height: 30px; background-color: #00BFFF; width: 0%; text-align: right; padding-right: 10px; color: black; font-weight: bold;">
+      0%
+    </div>
+  </div>
+</div>
+
+<script>
+  function updateWaveMeter(fdv) {
+    const milestones = [100000, 250000, 500000, 1000000];
+    const current = Math.round(fdv);
+    const nextTarget = milestones.find(m => m > current) || milestones[milestones.length - 1];
+    const progress = Math.min((current / nextTarget) * 100, 100);
+    document.getElementById('wave-fill').style.width = progress + '%';
+    document.getElementById('wave-fill').textContent = Math.round(progress) + '%';
+    document.getElementById('wave-status').textContent = `$${current.toLocaleString()} → $${nextTarget.toLocaleString()}`;
+  }
+</script>
+
 </body>
 </html>
