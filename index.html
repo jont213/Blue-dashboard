@@ -1,1 +1,203 @@
-<!DOCTYPE html><html><head><title>Placeholder</title></head><body>Reload failed. Regenerating...</body></html>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>$BLUE Casino Dashboard</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: black;
+      color: #00BFFF;
+      font-family: 'Courier New', monospace;
+      text-align: center;
+      overflow-x: hidden;
+    }
+    h1 {
+      margin-top: 20px;
+      font-size: 2em;
+      text-shadow: 0 0 10px #00BFFF, 0 0 20px #00BFFF;
+    }
+    #cap {
+      font-size: 1.5em;
+      margin: 10px 0;
+      color: #00FFEF;
+      text-shadow: 0 0 5px #00FFEF;
+    }
+    #top-buys {
+      margin-top: 30px;
+      color: #00FFEF;
+      font-size: 1em;
+      text-align: center;
+    }
+    .wallet-entry {
+      margin: 5px 0;
+      font-size: 1.1em;
+    }
+    .rank-1 { color: gold; }
+    .rank-2 { color: silver; }
+    .rank-3 { color: #cd7f32; }
+    #chart-container {
+      width: 90%;
+      max-width: 600px;
+      height: 200px;
+      margin: 20px auto;
+    }
+    canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+    #matrix {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: -1;
+    }
+    a {
+      color: #00BFFF;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="matrix"></canvas>
+  <h1>$BLUE CASINO</h1>
+  <div id="cap">Loading Market Cap...</div>
+  <div id="chart-container">
+    <canvas id="chart"></canvas>
+  </div>
+
+  <div id="top-buys">
+    <h2>💸 Top 10 Buys</h2>
+    <div id="wallet-list">Loading...</div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const capEl = document.getElementById('cap');
+    const walletList = document.getElementById('wallet-list');
+    let priceHistory = [];
+
+    const ctx = document.getElementById('chart').getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          data: [],
+          borderColor: '#00BFFF',
+          fill: false,
+          pointRadius: 0,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { display: false },
+          y: { display: false }
+        }
+      }
+    });
+
+    async function fetchMarketData() {
+      try {
+        const res = await fetch('https://api.dexscreener.com/latest/dex/pairs/base/0x03623367F4a833f23E8C917b3448DD31805E3D07');
+        const data = await res.json();
+        const pair = data.pairs?.[0];
+        const fdv = parseFloat(pair?.fdv);
+        if (!isNaN(fdv)) {
+          capEl.textContent = "$" + Math.round(fdv).toLocaleString();
+
+          const price = parseFloat(pair?.priceUsd);
+          const now = new Date().toLocaleTimeString();
+          if (!isNaN(price)) {
+            priceHistory.push({ time: now, value: price });
+            if (priceHistory.length > 30) priceHistory.shift();
+
+            chart.data.labels = priceHistory.map(p => p.time);
+            chart.data.datasets[0].data = priceHistory.map(p => p.value);
+            chart.update();
+          }
+        }
+      } catch (e) {
+        capEl.textContent = "Error loading data";
+      }
+    }
+
+    async function fetchTopBuys() {
+      try {
+        const res = await fetch('https://api.dexscreener.com/latest/dex/pairs/base/0x03623367F4a833f23E8C917b3448DD31805E3D07');
+        const data = await res.json();
+        const txs = data.pairs?.[0]?.txs;
+
+        if (!txs || !Array.isArray(txs) || txs.length === 0) {
+          walletList.textContent = "No wallet transaction data available.";
+          return;
+        }
+
+        const buys = txs.filter(tx => tx.side === 'buy');
+        if (buys.length === 0) {
+          walletList.textContent = "No buy transactions yet.";
+          return;
+        }
+
+        const topBuys = buys
+          .map(tx => ({
+            wallet: tx.from,
+            usd: parseFloat(tx.priceUsd)
+          }))
+          .sort((a, b) => b.usd - a.usd)
+          .slice(0, 10);
+
+        walletList.innerHTML = topBuys.map((entry, i) => {
+          const shortAddr = entry.wallet.slice(0, 6) + "..." + entry.wallet.slice(-4);
+          const usd = "$" + Math.round(entry.usd).toLocaleString();
+          const rankClass = i === 0 ? "rank-1" : i === 1 ? "rank-2" : i === 2 ? "rank-3" : "";
+          const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "💰";
+          const baseScan = `https://basescan.org/address/${entry.wallet}`;
+          return `<div class="wallet-entry ${rankClass}">${medal} <a href="${baseScan}" target="_blank">${shortAddr}</a> → ${usd}</div>`;
+        }).join("");
+
+      } catch (e) {
+        walletList.textContent = "Error loading wallet data.";
+      }
+    }
+
+    fetchMarketData();
+    fetchTopBuys();
+    setInterval(fetchMarketData, 10000);
+    setInterval(fetchTopBuys, 30000);
+
+    const canvas = document.getElementById("matrix");
+    const ctxMatrix = canvas.getContext("2d");
+    canvas.height = window.innerHeight;
+    canvas.width = window.innerWidth;
+    const letters = "0123456789";
+    const fontSize = 14;
+    const columns = canvas.width / fontSize;
+    const drops = Array.from({ length: columns }).fill(1);
+
+    function drawMatrix() {
+      ctxMatrix.fillStyle = "rgba(0, 0, 0, 0.05)";
+      ctxMatrix.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctxMatrix.fillStyle = "#00BFFF";
+      ctxMatrix.font = fontSize + "px monospace";
+
+      for (let i = 0; i < drops.length; i++) {
+        const text = letters[Math.floor(Math.random() * letters.length)];
+        ctxMatrix.fillText(text, i * fontSize, drops[i] * fontSize);
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+    }
+
+    setInterval(drawMatrix, 33);
+  </script>
+</body>
+</html>
