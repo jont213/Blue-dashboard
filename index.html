@@ -1,83 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>$BLUE Dashboard</title>
   <style>
     body, html { margin:0; padding:0; overflow:hidden; background:#000; color:#fff; }
     canvas#bg { position:fixed; top:0; left:0; z-index:0; }
-    #app { position:relative; z-index:1; display:flex;flex-direction:column;align-items:center;
-           justify-content:center;height:100vh;font-family:sans-serif; }
-    h1 { color:#0052FF; }
-    canvas#chart { background:#111; border:2px solid #0052FF; border-radius:8px; }
-    #price { font-size:24px; margin-top:10px; }
+    #app { position:relative; z-index:1; display:flex; flex-direction:column;
+           align-items:center; justify-content:center; height:100vh; font-family:sans-serif; }
+    h1 { color:#0052FF; margin-bottom:10px; }
+    #chart { width:800px; height:400px; border:2px solid #0052FF; border-radius:8px; }
+    #info { margin-top:10px; color:#00ff99; text-align:center; }
   </style>
 </head>
 <body>
   <canvas id="bg"></canvas>
   <div id="app">
-    <h1>$BLUE (Uniswap V3)</h1>
-    <canvas id="chart" width="800" height="400"></canvas>
-    <p id="price"></p>
+    <h1>$BLUE (CoinGecko)</h1>
+    <div id="chart"></div>
+    <div id="info">
+      <p id="price">Loading price...</p>
+    </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
   <script>
-    // Matrix background (unchanged)
+    // Matrix background
     const bg = document.getElementById('bg'), ctx = bg.getContext('2d');
     let size = 16, drops = [];
-    function initBG(){ bg.width = innerWidth; bg.height = innerHeight; drops = Array(Math.floor(bg.width/size)).fill(1); }
-    function drawBG(){
-      ctx.fillStyle = 'rgba(0,0,0,0.05)'; ctx.fillRect(0,0,bg.width,bg.height);
+    function initBG() {
+      bg.width = innerWidth;
+      bg.height = innerHeight;
+      drops = Array(Math.floor(bg.width / size)).fill(1);
+    }
+    function drawBG() {
+      ctx.fillStyle = 'rgba(0,0,0,0.05)';
+      ctx.fillRect(0, 0, bg.width, bg.height);
       ctx.fillStyle = '#0F0';
-      drops.forEach((d,i)=>{
-        const text=String.fromCharCode(0x30A0+Math.random()*96);
-        ctx.fillText(text, i*size, d*size);
-        if(d*size>bg.height || Math.random()>0.975) drops[i]=0;
+      drops.forEach((d, i) => {
+        const text = String.fromCharCode(0x30A0 + Math.random() * 96);
+        ctx.fillText(text, i * size, d * size);
+        if (d * size > bg.height || Math.random() > 0.975) drops[i] = 0;
         drops[i]++;
       });
       requestAnimationFrame(drawBG);
     }
-    window.addEventListener('resize',initBG);
+    window.addEventListener('resize', initBG);
     initBG(); drawBG();
 
-    // Chart setup with linear x-axis
-    const ctxChart = document.getElementById('chart').getContext('2d');
-    const priceTxt = document.getElementById('price');
-    const chart = new Chart(ctxChart, {
-      type: 'line',
-      data: { labels: [], datasets: [{ label: '$BLUE (USD)', data: [], borderColor: '#0052FF', fill: false }] },
-      options: { animation: false, scales: { x: { title: { display: true, text: 'Updates' } }, y: { title: { display: true, text: 'Price (USD)' } } } }
+    // Chart setup
+    const chart = LightweightCharts.createChart(document.getElementById('chart'), {
+      width: 800,
+      height: 400,
+      layout: { background: { color: '#000' }, textColor: '#fff' },
+      grid: { vertLines: { color: '#222' }, horzLines: { color: '#222' } },
+      timeScale: { timeVisible: true, secondsVisible: true }
     });
+    const series = chart.addLineSeries({ color: '#0052FF' });
+    let index = 0;
 
-    async function update(){
+    // Price update function
+    const priceEl = document.getElementById('price');
+    async function fetchPrice() {
       try {
-        const res = await fetch('https://api.dexscreener.com/latest/dex/pairs/base/0x03623367F4a833f23E8C917b3448DD31805E3D07');
+        const url = 'https://api.coingecko.com/api/v3/simple/token_price/base?contract_addresses=0x03623367F4a833f23E8C917b3448DD31805E3D07&vs_currencies=usd';
+        const res = await fetch(url);
         const data = await res.json();
-        const pair = data.pairs?.[0];
-        if (!pair) {
-          priceTxt.textContent = 'No price data available';
-          return;
+        const price = data['0x03623367F4a833f23E8C917b3448DD31805E3D07']?.usd;
+        if (price) {
+          priceEl.textContent = 'Price: $' + price.toFixed(6);
+          const timestamp = Math.floor(Date.now() / 1000);
+          series.update({ time: timestamp, value: price });
+        } else {
+          priceEl.textContent = 'Price not available.';
         }
-        const p = parseFloat(pair.priceUsd);
-        if (!isNaN(p)) {
-          const len = chart.data.labels.length;
-          chart.data.labels.push(len + 1);
-          chart.data.datasets[0].data.push(p);
-          if (len > 60) {
-            chart.data.labels.shift();
-            chart.data.datasets[0].data.shift();
-          }
-          chart.update();
-          priceTxt.textContent = `Price: $${p.toFixed(6)} (${parseFloat(pair.priceNative).toFixed(6)} BASE)`;
-        }
-      } catch(e){
-        console.error('Fetch error', e);
-        priceTxt.textContent = 'Error fetching price data';
+      } catch (err) {
+        console.error(err);
+        priceEl.textContent = 'Error loading price.';
       }
     }
-    setInterval(update, 5000);
-    update();
+
+    setInterval(fetchPrice, 10000);
+    fetchPrice();
   </script>
 </body>
 </html>
