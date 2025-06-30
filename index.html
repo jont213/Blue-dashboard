@@ -90,10 +90,11 @@
       height: 100%;
       z-index: -1;
     }
-  </style>
+  
+body { padding: 0 240px; }</style>
 </head>
 <body>
-<div id="sidebar-toggle" style="position: fixed; top: 60px; right: 0; background: #00BFFF; color: black; padding: 8px 10px; font-weight: bold; border-top-left-radius: 5px; border-bottom-left-radius: 5px; cursor: pointer; z-index: 10;">GAMES ▶</div><canvas id="matrix"></canvas>
+<div id="left-game" style="position: fixed; top: 120px; left: 0; width: 220px; background: rgba(0,0,0,0.85); color: #00BFFF; padding: 10px; height: calc(100% - 140px); overflow-y: auto; font-size: 0.9em; border-right: 2px solid #00BFFF; z-index: 10;"></div><div id="right-game" style="position: fixed; top: 120px; right: 0; width: 220px; background: rgba(0,0,0,0.85); color: #00BFFF; padding: 10px; height: calc(100% - 140px); overflow-y: auto; font-size: 0.9em; border-left: 2px solid #00BFFF; z-index: 10;"></div><canvas id="matrix"></canvas>
 <h1>$BLUE CASINO</h1>
 <div id="cap">Loading Market Cap...</div>
 <hr/>
@@ -349,5 +350,5 @@ document.addEventListener("DOMContentLoaded", function () {
 <h2>🐋 BLUE WHALE WATCH</h2>
 <div id="whale-info" style="font-size: 1.2em; color: #00FFEF;">Scanning wallets...</div>
 </div>
-</section></body>
+</section><footer style="text-align: center; margin-top: 60px; padding: 20px; font-size: 1em; color: #00BFFF;">Follow $BLUE: <a href="https://twitter.com/blueonbase" style="color: #00BFFF; margin: 0 12px; text-decoration: none;" target="_blank">Twitter</a><a href="https://t.me/blueonbase" style="color: #00BFFF; margin: 0 12px; text-decoration: none;" target="_blank">Telegram</a><a href="https://dexscreener.com/base/0x03623367F4a833f23E8C917b3448DD31805E3D07" style="color: #00BFFF; margin: 0 12px; text-decoration: none;" target="_blank">Dexscreener</a><a href="https://basescan.org/token/0x03623367F4a833f23E8C917b3448DD31805E3D07" style="color: #00BFFF; margin: 0 12px; text-decoration: none;" target="_blank">BaseScan</a></footer></body>
 </html>
