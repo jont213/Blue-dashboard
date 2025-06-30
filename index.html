@@ -244,13 +244,13 @@
 <hr/>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-  const sidebar = document.getElementById('sidebar');
+  const wrapper = document.getElementById('sidebar-wrapper');
   const toggle = document.getElementById('sidebar-toggle');
   let sidebarVisible = true;
 
   toggle.onclick = () => {
     sidebarVisible = !sidebarVisible;
-    sidebar.style.transform = sidebarVisible ? 'translateX(0)' : 'translateX(100%)';
+    wrapper.style.transform = sidebarVisible ? 'translateX(0)' : 'translateX(100%)';
     toggle.textContent = sidebarVisible ? 'GAMES ▶' : 'GAMES ◀';
   };
 });
