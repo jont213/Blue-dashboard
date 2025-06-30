@@ -379,25 +379,23 @@
 <script>
   async function fetchBaseStats() {
     try {
-      const response = await fetch('https://api.llama.fi/protocols');
-      const data = await response.json();
+      const res = await fetch('https://api.llama.fi/chains');
+      const data = await res.json();
+      const base = data.find(c => c.name.toLowerCase() === 'base');
+      if (!base) throw new Error();
 
-      const baseProtocol = data.find(p => p.name.toLowerCase() === 'base');
-      if (!baseProtocol) {
-        document.getElementById('base-stats').textContent = "Base chain stats unavailable.";
-        return;
-      }
+      const tvl = base.tvl ? "$" + Math.round(base.tvl).toLocaleString() : "N/A";
+      const bridges = base.bridgedTvl ? "$" + Math.round(base.bridgedTvl).toLocaleString() : "N/A";
+      const active = base.addresses ? base.addresses.toLocaleString() : "N/A";
 
-      const txs = baseProtocol?.numberOfUsers || "N/A";
-      const tvl = baseProtocol?.tvl ? "$" + Math.round(baseProtocol.tvl).toLocaleString() : "N/A";
       const statsHTML = `
-        📊 Total Users: ${txs}<br>
-        💰 TVL: ${tvl}<br>
-        ⚙️ Activity: Alive and scaling 🚀
+        📊 TVL: ${tvl}<br>
+        🌉 Bridged TVL: ${bridges}<br>
+        👥 Active Wallets: ${active}
       `;
       document.getElementById('base-stats').innerHTML = statsHTML;
     } catch (e) {
-      document.getElementById('base-stats').textContent = "Error loading Base stats.";
+      document.getElementById('base-stats').textContent = "Base chain stats unavailable.";
     }
   }
 
