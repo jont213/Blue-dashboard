@@ -2,34 +2,41 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>$BLUE Market Cap Debug</title>
+  <title>$BLUE Market Cap (Visible Logs)</title>
   <style>
     body, html { margin:0; padding:0; background:#000; overflow:hidden; color:#00f; font-family: monospace; }
     canvas#bg { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; }
     #app { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center;
-           justify-content:center; height:100vh; text-align:center; }
+           justify-content:center; height:100vh; text-align:center; padding: 2em; box-sizing: border-box; }
     h1 { font-size:2.5em; margin-bottom:20px; }
     #countdown { font-size:3em; letter-spacing:0.1em; color:#00f; }
-    #label { font-size:1.2em; margin-top:10px; color:#ccc; }
+    #label { font-size:1.2em; margin:10px 0; color:#ccc; }
+    #logbox { font-size:0.9em; color:#0f0; background:#111; padding:1em; border-radius:8px; width:100%; max-width:700px; overflow:auto; max-height:250px; text-align:left; }
   </style>
 </head>
 <body>
   <canvas id="bg"></canvas>
   <div id="app">
-    <h1>$BLUE MARKET CAP (Debug Mode)</h1>
+    <h1>$BLUE MARKET CAP (Live Debug)</h1>
     <div id="countdown">Loading...</div>
-    <div id="label">Check console for logs (F12)</div>
+    <div id="label">Log Output:</div>
+    <pre id="logbox">Waiting for update...</pre>
   </div>
 
   <script>
-    // Matrix background with blue numbers
+    const log = (msg) => {
+      const box = document.getElementById('logbox');
+      box.textContent += "\n" + msg;
+      box.scrollTop = box.scrollHeight;
+    };
+
+    // Matrix background
     const canvas = document.getElementById('bg');
     const ctx = canvas.getContext('2d');
     let width = window.innerWidth;
     let height = window.innerHeight;
     let fontSize = 16;
-    let columns;
-    let drops;
+    let columns, drops;
 
     function setupMatrix() {
       canvas.width = width;
@@ -61,29 +68,27 @@
     setupMatrix();
     drawMatrix();
 
-    // Countdown logic using CoinGecko market_chart with debug logs
+    // Market Cap Display
     const capDisplay = document.getElementById('countdown');
 
     async function updateMarketCap() {
+      const url = 'https://api.coingecko.com/api/v3/coins/base/contract/0x03623367F4a833f23E8C917b3448DD31805E3D07/market_chart/?vs_currency=usd&days=1';
       try {
-        const url = 'https://api.coingecko.com/api/v3/coins/base/contract/0x03623367F4a833f23E8C917b3448DD31805E3D07/market_chart/?vs_currency=usd&days=1';
-        console.log("Fetching market cap data from:", url);
+        log("Fetching: " + url);
         const res = await fetch(url);
-        console.log("Response status:", res.status);
+        log("Status: " + res.status);
         const data = await res.json();
-        console.log("Full response data:", data);
-
-        const marketCaps = data.market_caps;
-        if (marketCaps && marketCaps.length > 0) {
-          const latest = marketCaps[marketCaps.length - 1][1];
-          console.log("Latest market cap value:", latest);
+        log("Response received");
+        if (data.market_caps && data.market_caps.length > 0) {
+          const latest = data.market_caps[data.market_caps.length - 1][1];
+          log("Latest Market Cap: $" + latest);
           capDisplay.textContent = "$" + Math.round(latest).toLocaleString();
         } else {
-          console.warn("Market cap array is missing or empty.");
+          log("Warning: Market cap data is missing or empty.");
           capDisplay.textContent = "Data not available";
         }
       } catch (err) {
-        console.error("Error fetching/parsing market cap:", err);
+        log("Error: " + err.message);
         capDisplay.textContent = "Error loading data";
       }
     }
