@@ -243,20 +243,17 @@
 <hr/>
 <hr/>
 <script>
-const sidebar = document.getElementById('sidebar');
-const toggle = document.getElementById('sidebar-toggle');
-let sidebarVisible = true;
+document.addEventListener("DOMContentLoaded", function () {
+  const sidebar = document.getElementById('sidebar');
+  const toggle = document.getElementById('sidebar-toggle');
+  let sidebarVisible = true;
 
-toggle.onclick = () => {
-  sidebarVisible = !sidebarVisible;
-  if (sidebarVisible) {
-    sidebar.style.transform = 'translateX(0)';
-    toggle.textContent = 'GAMES ▶';
-  } else {
-    sidebar.style.transform = 'translateX(100%)';
-    toggle.textContent = 'GAMES ◀';
-  }
-};
+  toggle.onclick = () => {
+    sidebarVisible = !sidebarVisible;
+    sidebar.style.transform = sidebarVisible ? 'translateX(0)' : 'translateX(100%)';
+    toggle.textContent = sidebarVisible ? 'GAMES ▶' : 'GAMES ◀';
+  };
+});
 </script><section>
 <div id="wave-meter" style="margin-top: 50px;">
 <h2>🌊 $BLUE Wave Meter</h2>
