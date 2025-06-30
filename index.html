@@ -93,146 +93,7 @@
   </style>
 </head>
 <body>
-<div id="sidebar-toggle" style="position: fixed; top: 60px; right: 0; background: #00BFFF; color: black; padding: 8px 10px; font-weight: bold; border-top-left-radius: 5px; border-bottom-left-radius: 5px; cursor: pointer; z-index: 10;">GAMES ▶</div><div id="sidebar" style="position: fixed; top: 100px; right: 0; width: 220px; background: rgba(0,0,0,0.8);color: #00BFFF; padding: 10px; border-left: 2px solid #00BFFF; height: calc(100% - 120px);overflow-y: auto; font-size: 0.9em; z-index: 5; transition: transform 0.3s ease-in-out; transform: translateX(0);"><section>
-<div id="dice-game" style="margin-top: 40px;">
-<h2>🎲 Roll the BLUE Dice</h2>
-<button onclick="rollDice()" style="padding: 10px 20px; font-size: 1em; background-color: #00BFFF; color: black; border: none; border-radius: 5px; cursor: pointer;">
-    Roll Dice
-  </button>
-<div id="dice-result" style="font-size: 1.5em; margin-top: 10px;">🎲🎲</div>
-</div>
-<script>
-  function rollDice() {
-    const die1 = Math.floor(Math.random() * 6) + 1;
-    const die2 = Math.floor(Math.random() * 6) + 1;
-    const total = die1 + die2;
-    const emojis = ['⚀','⚁','⚂','⚃','⚄','⚅'];
-    document.getElementById('dice-result').innerHTML = emojis[die1 - 1] + " + " + emojis[die2 - 1] + " = <b>" + total + "</b>";
-  }
-</script>
-</section><section>
-<div id="slot-machine" style="margin-top: 50px;">
-<h2>🪩 $BLUE Slot Machine</h2>
-<button onclick="pullSlot()" style="padding: 10px 20px; font-size: 1em; background-color: #00BFFF; color: black; border: none; border-radius: 5px; cursor: pointer;">
-    Pull Lever
-  </button>
-<div id="slot-result" style="font-size: 2em; margin-top: 15px;">🔵🔵🔵</div>
-<div id="slot-message" style="margin-top: 10px; font-size: 1.2em;"></div>
-</div>
-<script>
-  function pullSlot() {
-    const symbols = ['🔵', '💎', '💰', '🚀', '🔥', '🌊'];
-    const spin = [
-      symbols[Math.floor(Math.random() * symbols.length)],
-      symbols[Math.floor(Math.random() * symbols.length)],
-      symbols[Math.floor(Math.random() * symbols.length)]
-    ];
-    document.getElementById('slot-result').innerHTML = spin.join('');
-    if (spin[0] === spin[1] && spin[1] === spin[2]) {
-      document.getElementById('slot-message').textContent = "🎉 JACKPOT! YOU'RE FEELING $BLUE!";
-    } else {
-      document.getElementById('slot-message').textContent = "Try again, degen.";
-    }
-  }
-</script>
-</section><section>
-<div id="wave-meter" style="margin-top: 50px;">
-<h2>🌊 $BLUE Wave Meter</h2>
-<div id="wave-status" style="font-size: 1.3em; margin: 10px 0;">Loading...</div>
-<div style="background: #333; border-radius: 10px; overflow: hidden; width: 90%; max-width: 500px; margin: auto;">
-<div id="wave-fill" style="height: 30px; background-color: #00BFFF; width: 0%; text-align: right; padding-right: 10px; color: black; font-weight: bold;">
-      0%
-    </div>
-</div>
-</div>
-<script>
-  function updateWaveMeter(fdv) {
-    const milestones = [100000, 250000, 500000, 1000000];
-    const current = Math.round(fdv);
-    const nextTarget = milestones.find(m => m > current) || milestones[milestones.length - 1];
-    const progress = Math.min((current / nextTarget) * 100, 100);
-    document.getElementById('wave-fill').style.width = progress + '%';
-    document.getElementById('wave-fill').textContent = Math.round(progress) + '%';
-    document.getElementById('wave-status').textContent = `$${current.toLocaleString()} → $${nextTarget.toLocaleString()}`;
-  }
-</script>
-<hr/>
-<section>
-<div id="blue-whale" style="margin-top: 30px;">
-<h2>🐋 BLUE WHALE WATCH</h2>
-<div id="whale-info" style="font-size: 1.2em; color: #00FFEF;">Scanning wallets...</div>
-</div>
-</section>
-<script>
-  async function fetchBlueWhale() {
-    try {
-      const res = await fetch('https://api.dexscreener.com/latest/dex/pairs/base/0x03623367F4a833f23E8C917b3448DD31805E3D07');
-      const data = await res.json();
-      const txs = data.pairs?.[0]?.txs;
-
-      if (!txs || txs.length === 0) {
-        document.getElementById('whale-info').textContent = "No recent buys detected.";
-        return;
-      }
-
-      const biggestBuy = txs
-        .filter(tx => tx.side === 'buy')
-        .sort((a, b) => parseFloat(b.priceUsd) - parseFloat(a.priceUsd))[0];
-
-      if (!biggestBuy) {
-        document.getElementById('whale-info').textContent = "No buys found.";
-        return;
-      }
-
-      const shortWallet = biggestBuy.from.slice(0, 6) + "..." + biggestBuy.from.slice(-4);
-      const buyAmount = "$" + parseFloat(biggestBuy.priceUsd).toLocaleString();
-      const link = `https://basescan.org/address/${biggestBuy.from}`;
-
-      document.getElementById('whale-info').innerHTML = `🐳 <a href="${link}" target="_blank">${shortWallet}</a> bought <b>${buyAmount}</b> worth of $BLUE`;
-    } catch (e) {
-      document.getElementById('whale-info').textContent = "Error loading whale data.";
-    }
-  }
-
-  fetchBlueWhale();
-  setInterval(fetchBlueWhale, 30000);
-</script>
-<hr/>
-<section>
-<div id="base-scanner" style="margin-top: 40px;">
-<h2>📡 BASE CHAIN SCANNER</h2>
-<div id="base-stats" style="font-size: 1.2em; line-height: 1.6em; color: #00FFEF;">
-      Loading Base network stats...
-    </div>
-</div>
-</section>
-<script>
-  async function fetchBaseStats() {
-    try {
-      const res = await fetch('https://api.llama.fi/chains');
-      const data = await res.json();
-      const base = data.find(c => c.name.toLowerCase() === 'base');
-      if (!base) throw new Error();
-
-      const tvl = base.tvl ? "$" + Math.round(base.tvl).toLocaleString() : "N/A";
-      const bridges = base.bridgedTvl ? "$" + Math.round(base.bridgedTvl).toLocaleString() : "N/A";
-      const active = base.addresses ? base.addresses.toLocaleString() : "N/A";
-
-      const statsHTML = `
-        📊 TVL: ${tvl}<br>
-        🌉 Bridged TVL: ${bridges}<br>
-        👥 Active Wallets: ${active}
-      `;
-      document.getElementById('base-stats').innerHTML = statsHTML;
-    } catch (e) {
-      document.getElementById('base-stats').textContent = "Base chain stats unavailable.";
-    }
-  }
-
-  fetchBaseStats();
-  setInterval(fetchBaseStats, 60000);
-</script>
-</section></div><canvas id="matrix"></canvas>
+<div id="sidebar-toggle" style="position: fixed; top: 60px; right: 0; background: #00BFFF; color: black; padding: 8px 10px; font-weight: bold; border-top-left-radius: 5px; border-bottom-left-radius: 5px; cursor: pointer; z-index: 10;">GAMES ▶</div><canvas id="matrix"></canvas>
 <h1>$BLUE CASINO</h1>
 <div id="cap">Loading Market Cap...</div>
 <hr/>
@@ -396,5 +257,102 @@ toggle.onclick = () => {
     toggle.textContent = 'GAMES ◀';
   }
 };
-</script></body>
+</script><section>
+<div id="wave-meter" style="margin-top: 50px;">
+<h2>🌊 $BLUE Wave Meter</h2>
+<div id="wave-status" style="font-size: 1.3em; margin: 10px 0;">Loading...</div>
+<div style="background: #333; border-radius: 10px; overflow: hidden; width: 90%; max-width: 500px; margin: auto;">
+<div id="wave-fill" style="height: 30px; background-color: #00BFFF; width: 0%; text-align: right; padding-right: 10px; color: black; font-weight: bold;">
+      0%
+    </div>
+</div>
+</div>
+<script>
+  function updateWaveMeter(fdv) {
+    const milestones = [100000, 250000, 500000, 1000000];
+    const current = Math.round(fdv);
+    const nextTarget = milestones.find(m => m > current) || milestones[milestones.length - 1];
+    const progress = Math.min((current / nextTarget) * 100, 100);
+    document.getElementById('wave-fill').style.width = progress + '%';
+    document.getElementById('wave-fill').textContent = Math.round(progress) + '%';
+    document.getElementById('wave-status').textContent = `$${current.toLocaleString()} → $${nextTarget.toLocaleString()}`;
+  }
+</script>
+<hr/>
+
+<script>
+  async function fetchBlueWhale() {
+    try {
+      const res = await fetch('https://api.dexscreener.com/latest/dex/pairs/base/0x03623367F4a833f23E8C917b3448DD31805E3D07');
+      const data = await res.json();
+      const txs = data.pairs?.[0]?.txs;
+
+      if (!txs || txs.length === 0) {
+        document.getElementById('whale-info').textContent = "No recent buys detected.";
+        return;
+      }
+
+      const biggestBuy = txs
+        .filter(tx => tx.side === 'buy')
+        .sort((a, b) => parseFloat(b.priceUsd) - parseFloat(a.priceUsd))[0];
+
+      if (!biggestBuy) {
+        document.getElementById('whale-info').textContent = "No buys found.";
+        return;
+      }
+
+      const shortWallet = biggestBuy.from.slice(0, 6) + "..." + biggestBuy.from.slice(-4);
+      const buyAmount = "$" + parseFloat(biggestBuy.priceUsd).toLocaleString();
+      const link = `https://basescan.org/address/${biggestBuy.from}`;
+
+      document.getElementById('whale-info').innerHTML = `🐳 <a href="${link}" target="_blank">${shortWallet}</a> bought <b>${buyAmount}</b> worth of $BLUE`;
+    } catch (e) {
+      document.getElementById('whale-info').textContent = "Error loading whale data.";
+    }
+  }
+
+  fetchBlueWhale();
+  setInterval(fetchBlueWhale, 30000);
+</script>
+<hr/>
+
+<script>
+  async function fetchBaseStats() {
+    try {
+      const res = await fetch('https://api.llama.fi/chains');
+      const data = await res.json();
+      const base = data.find(c => c.name.toLowerCase() === 'base');
+      if (!base) throw new Error();
+
+      const tvl = base.tvl ? "$" + Math.round(base.tvl).toLocaleString() : "N/A";
+      const bridges = base.bridgedTvl ? "$" + Math.round(base.bridgedTvl).toLocaleString() : "N/A";
+      const active = base.addresses ? base.addresses.toLocaleString() : "N/A";
+
+      const statsHTML = `
+        📊 TVL: ${tvl}<br>
+        🌉 Bridged TVL: ${bridges}<br>
+        👥 Active Wallets: ${active}
+      `;
+      document.getElementById('base-stats').innerHTML = statsHTML;
+    } catch (e) {
+      document.getElementById('base-stats').textContent = "Base chain stats unavailable.";
+    }
+  }
+
+  fetchBaseStats();
+  setInterval(fetchBaseStats, 60000);
+</script>
+</section><section>
+<div id="base-scanner" style="margin-top: 40px;">
+<h2>📡 BASE CHAIN SCANNER</h2>
+<div id="base-stats" style="font-size: 1.2em; line-height: 1.6em; color: #00FFEF;">
+      Loading Base network stats...
+    </div>
+</div>
+</section><section>
+<div id="blue-whale" style="margin-top: 30px;">
+<h2>🐋 BLUE WHALE WATCH</h2>
+<div id="whale-info" style="font-size: 1.2em; color: #00FFEF;">Scanning wallets...</div>
+</div>
+</section></body>
 </html>
