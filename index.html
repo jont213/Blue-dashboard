@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>$BLUE Market Cap Countdown</title>
   <style>
     body, html { margin:0; padding:0; background:#000; overflow:hidden; color:#0052FF; font-family: monospace; }
@@ -61,17 +61,18 @@
     setupMatrix();
     drawMatrix();
 
-    // Countdown logic using market cap
+    // Countdown logic using CoinGecko market_chart
     const capDisplay = document.getElementById('countdown');
+
     async function updateMarketCap() {
       try {
-        const url = 'https://api.coingecko.com/api/v3/simple/token_price/base?contract_addresses=0x03623367F4a833f23E8C917b3448DD31805E3D07&vs_currencies=usd&include_market_cap=true';
+        const url = 'https://api.coingecko.com/api/v3/coins/base/contract/0x03623367F4a833f23E8C917b3448DD31805E3D07/market_chart/?vs_currency=usd&days=1';
         const res = await fetch(url);
         const data = await res.json();
-        const token = data['0x03623367F4a833f23E8C917b3448DD31805E3D07'];
-        if (token && token.usd_market_cap) {
-          const marketCap = token.usd_market_cap;
-          capDisplay.textContent = "$" + marketCap.toLocaleString(undefined, {minimumFractionDigits: 0});
+        const marketCaps = data.market_caps;
+        if (marketCaps && marketCaps.length > 0) {
+          const latest = marketCaps[marketCaps.length - 1][1]; // second item in the last array = market cap
+          capDisplay.textContent = "$" + Math.round(latest).toLocaleString();
         } else {
           capDisplay.textContent = "Data not available";
         }
