@@ -1,81 +1,354 @@
 
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>$BLUE Casino</title>
-  <style>
+<meta charset="utf-8"/>
+<title>$BLUE Casino Dashboard</title>
+<style>
+    html, body {
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+    h2 {
+      text-shadow: 0 0 8px #00BFFF;
+    }
+    button:hover {
+      background-color: #008CBA;
+    }
+    @media (max-width: 600px) {
+      h1 { font-size: 1.5em; }
+      #cap, #pressure, .wallet-entry, #slot-message { font-size: 1em; }
+      button { font-size: 0.9em; padding: 8px 16px; }
+    }
+    hr {
+      border: 0;
+      height: 1px;
+      background: #00BFFF;
+      margin: 40px auto;
+      width: 80%;
+      box-shadow: 0 0 5px #00BFFF;
+    }
+    section {
+      margin-top: 40px;
+    }
+    
     body {
-      background: black;
+      margin: 0;
+      background-color: black;
       color: #00BFFF;
       font-family: 'Courier New', monospace;
       text-align: center;
-      padding-top: 80px;
+      overflow-x: hidden;
     }
-    #news-ticker {
+    h1 {
+      margin-top: 20px;
+      font-size: 2em;
+      text-shadow: 0 0 10px #00BFFF, 0 0 20px #00BFFF;
+    }
+    #cap {
+      font-size: 1.5em;
+      margin: 10px 0;
+      color: #00FFEF;
+      text-shadow: 0 0 5px #00FFEF;
+    }
+    #pressure {
+      margin: 20px auto;
+      width: 90%;
+      max-width: 400px;
+      padding: 10px;
+      border: 2px solid #00BFFF;
+      border-radius: 10px;
+      font-size: 1.1em;
+      box-shadow: 0 0 10px #00BFFF;
+    }
+    #chart-container {
+      width: 90%;
+      max-width: 600px;
+      height: 200px;
+      margin: 20px auto;
+    }
+    canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+    #top-buys {
+      margin-top: 30px;
+    }
+    .wallet-entry {
+      margin: 5px 0;
+      font-size: 1.1em;
+    }
+    .rank-1 { color: gold; }
+    .rank-2 { color: silver; }
+    .rank-3 { color: #cd7f32; }
+    #matrix {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
-      background: #000;
-      color: #00BFFF;
-      font-size: 1em;
-      font-weight: bold;
-      padding: 10px 0;
-      z-index: 9999;
-      overflow: hidden;
+      height: 100%;
+      z-index: -1;
     }
-    #ticker-content {
-      display: inline-block;
-      white-space: nowrap;
-      animation: scroll-left 25s linear infinite;
-    }
-    @keyframes scroll-left {
-      0% { transform: translateX(100%); }
-      100% { transform: translateX(-100%); }
-    }
-    h1, h2 {
-      text-shadow: 0 0 8px #00BFFF;
-    }
-    button {
-      background: black;
-      color: #00BFFF;
-      padding: 10px 20px;
-      border: 2px solid #00BFFF;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    footer {
-      margin-top: 60px;
-      padding: 20px;
-      font-size: 1em;
-    }
-    footer a {
-      color: #00BFFF;
-      margin: 0 12px;
-      text-decoration: none;
-    }
-  </style>
+  
+body { padding: 0 240px; }</style>
 </head>
 <body>
-  <div id="news-ticker">
-    <div id="ticker-content">
-      🚀 BLUE just flipped another base token | 🐳 Someone aped 6 ETH into $BLUE | 📈 Base chain user count rising | 💎 HODL or cry later | 🧵 Chart pattern: God Candle loading... | 🔄 Reloading blue vibes...
+<div id="left-game" style="position: fixed; top: 120px; left: 0; width: 220px; background: rgba(0,0,0,0.85); color: #00BFFF; padding: 10px; height: calc(100% - 140px); overflow-y: auto; font-size: 0.9em; border-right: 2px solid #00BFFF; z-index: 10;"></div><div id="right-game" style="position: fixed; top: 120px; right: 0; width: 220px; background: rgba(0,0,0,0.85); color: #00BFFF; padding: 10px; height: calc(100% - 140px); overflow-y: auto; font-size: 0.9em; border-left: 2px solid #00BFFF; z-index: 10;"></div><canvas id="matrix"></canvas>
+<h1>$BLUE CASINO</h1>
+<div id="cap">Loading Market Cap...</div>
+<hr/>
+<section>
+<div id="pressure">Buy Pressure: <span id="pressure-value">Loading...</span></div>
+</section>
+<hr/>
+<section>
+<div id="chart-container"><canvas id="chart"></canvas></div>
+</section>
+<hr/>
+<section>
+<!-- Removed Top 10 Buys -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Removed Top 10 Buys Script -->
+<script>
+    const capEl = document.getElementById('cap');
+    const walletList = document.getElementById('wallet-list');
+    const pressureVal = document.getElementById('pressure-value');
+    let priceHistory = [];
+
+    const ctx = document.getElementById('chart').getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          data: [],
+          borderColor: '#00BFFF',
+          fill: false,
+          pointRadius: 0,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { display: false },
+          y: { display: false }
+        }
+      }
+    });
+
+    async function fetchMarketData() {
+      try {
+        const res = await fetch('https://api.dexscreener.com/latest/dex/pairs/base/0x03623367F4a833f23E8C917b3448DD31805E3D07');
+        const data = await res.json();
+        const pair = data.pairs?.[0];
+        const fdv = parseFloat(pair?.fdv);
+        if (!isNaN(fdv)) {
+          capEl.textContent = "$" + Math.round(fdv).toLocaleString();
+      updateWaveMeter(fdv);
+
+          const price = parseFloat(pair?.priceUsd);
+          const now = new Date().toLocaleTimeString();
+          if (!isNaN(price)) {
+            priceHistory.push({ time: now, value: price });
+            if (priceHistory.length > 30) priceHistory.shift();
+
+            chart.data.labels = priceHistory.map(p => p.time);
+            chart.data.datasets[0].data = priceHistory.map(p => p.value);
+            chart.update();
+          }
+        }
+      } catch (e) {
+        capEl.textContent = "Error loading data";
+      }
+    }
+
+    async function fetchTopBuysAndPressure() {
+      try {
+        const res = await fetch('https://api.dexscreener.com/latest/dex/pairs/base/0x03623367F4a833f23E8C917b3448DD31805E3D07');
+        const data = await res.json();
+        const txs = data.pairs?.[0]?.txs;
+
+        if (!txs || !Array.isArray(txs) || txs.length === 0) {
+          walletList.textContent = "No wallet transaction data available.";
+          pressureVal.textContent = "No Data";
+          return;
+        }
+
+        const buys = txs.filter(tx => tx.side === 'buy');
+        const sells = txs.filter(tx => tx.side === 'sell');
+        const ratio = buys.length / (sells.length || 1);
+        const emoji = ratio > 1.5 ? "🚀" : ratio > 1 ? "📈" : ratio < 0.5 ? "📉" : "⚖️";
+        pressureVal.textContent = `${buys.length} buys / ${sells.length} sells ${emoji}`;
+
+        const topBuys = buys
+          .map(tx => ({
+            wallet: tx.from,
+            usd: parseFloat(tx.priceUsd)
+          }))
+          .sort((a, b) => b.usd - a.usd)
+          .slice(0, 10);
+
+        walletList.innerHTML = topBuys.map((entry, i) => {
+          const shortAddr = entry.wallet.slice(0, 6) + "..." + entry.wallet.slice(-4);
+          const usd = "$" + Math.round(entry.usd).toLocaleString();
+          const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "💰";
+          const baseScan = `https://basescan.org/address/${entry.wallet}`;
+          return `<div class="wallet-entry">${medal} <a href="${baseScan}" target="_blank">${shortAddr}</a> → ${usd}</div>`;
+        }).join("");
+
+      } catch (e) {
+        walletList.textContent = "Error loading wallet data.";
+        pressureVal.textContent = "Error";
+      }
+    }
+
+    fetchMarketData();
+    fetchTopBuysAndPressure();
+    setInterval(fetchMarketData, 10000);
+    setInterval(fetchTopBuysAndPressure, 30000);
+
+    const canvas = document.getElementById("matrix");
+    const ctxMatrix = canvas.getContext("2d");
+    canvas.height = window.innerHeight;
+    canvas.width = window.innerWidth;
+    const letters = "0123456789";
+    const fontSize = 14;
+    const columns = canvas.width / fontSize;
+    const drops = Array.from({ length: columns }).fill(1);
+
+    function drawMatrix() {
+      ctxMatrix.fillStyle = "rgba(0, 0, 0, 0.05)";
+      ctxMatrix.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctxMatrix.fillStyle = "#00BFFF";
+      ctxMatrix.font = fontSize + "px monospace";
+
+      for (let i = 0; i < drops.length; i++) {
+        const text = letters[Math.floor(Math.random() * letters.length)];
+        ctxMatrix.fillText(text, i * fontSize, drops[i] * fontSize);
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+    }
+
+    setInterval(drawMatrix, 33);
+  </script>
+</section>
+<hr/>
+<hr/>
+<hr/>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const wrapper = document.getElementById('sidebar-wrapper');
+  const toggle = document.getElementById('sidebar-toggle');
+  let sidebarVisible = true;
+
+  toggle.onclick = () => {
+    sidebarVisible = !sidebarVisible;
+    wrapper.style.transform = sidebarVisible ? 'translateX(0)' : 'translateX(100%)';
+    toggle.textContent = sidebarVisible ? 'GAMES ▶' : 'GAMES ◀';
+  };
+});
+</script><section>
+<div id="wave-meter" style="margin-top: 50px;">
+<h2>🌊 $BLUE Wave Meter</h2>
+<div id="wave-status" style="font-size: 1.3em; margin: 10px 0;">Loading...</div>
+<div style="background: #333; border-radius: 10px; overflow: hidden; width: 90%; max-width: 500px; margin: auto;">
+<div id="wave-fill" style="height: 30px; background-color: #00BFFF; width: 0%; text-align: right; padding-right: 10px; color: black; font-weight: bold;">
+      0%
     </div>
-  </div>
+</div>
+</div>
+<script>
+  function updateWaveMeter(fdv) {
+    const milestones = [100000, 250000, 500000, 1000000];
+    const current = Math.round(fdv);
+    const nextTarget = milestones.find(m => m > current) || milestones[milestones.length - 1];
+    const progress = Math.min((current / nextTarget) * 100, 100);
+    document.getElementById('wave-fill').style.width = progress + '%';
+    document.getElementById('wave-fill').textContent = Math.round(progress) + '%';
+    document.getElementById('wave-status').textContent = `$${current.toLocaleString()} → $${nextTarget.toLocaleString()}`;
+  }
+</script>
+<hr/>
+<script>
+  async function fetchBlueWhale() {
+    try {
+      const res = await fetch('https://api.dexscreener.com/latest/dex/pairs/base/0x03623367F4a833f23E8C917b3448DD31805E3D07');
+      const data = await res.json();
+      const txs = data.pairs?.[0]?.txs;
 
-  <h1>$BLUE CASINO</h1>
-  <h2>$74,490</h2>
-  <img src="https://upload.wikimedia.org/wikipedia/commons/3/34/Casino_Dice.png" alt="dice" width="80px">
-  <br><br>
-  <button>ROLL THE DICE</button>
+      if (!txs || txs.length === 0) {
+        document.getElementById('whale-info').textContent = "No recent buys detected.";
+        return;
+      }
 
-  <footer>
-    Follow $BLUE:
-    <a href="https://twitter.com/blue_base_blue" target="_blank">Twitter (X)</a>
-    <a href="https://t.me/BlueBlueBase" target="_blank">Telegram (Official)</a>
-    <a href="https://dexscreener.com/base/0x03623367F4a833f23E8C917b3448DD31805E3D07" target="_blank">Dexscreener</a>
-    <a href="https://basescan.org/token/0x03623367F4a833f23E8C917b3448DD31805E3D07" target="_blank">BaseScan</a>
-  </footer>
-</body>
+      const biggestBuy = txs
+        .filter(tx => tx.side === 'buy')
+        .sort((a, b) => parseFloat(b.priceUsd) - parseFloat(a.priceUsd))[0];
+
+      if (!biggestBuy) {
+        document.getElementById('whale-info').textContent = "No buys found.";
+        return;
+      }
+
+      const shortWallet = biggestBuy.from.slice(0, 6) + "..." + biggestBuy.from.slice(-4);
+      const buyAmount = "$" + parseFloat(biggestBuy.priceUsd).toLocaleString();
+      const link = `https://basescan.org/address/${biggestBuy.from}`;
+
+      document.getElementById('whale-info').innerHTML = `🐳 <a href="${link}" target="_blank">${shortWallet}</a> bought <b>${buyAmount}</b> worth of $BLUE`;
+    } catch (e) {
+      document.getElementById('whale-info').textContent = "Error loading whale data.";
+    }
+  }
+
+  fetchBlueWhale();
+  setInterval(fetchBlueWhale, 30000);
+</script>
+<hr/>
+<script>
+  async function fetchBaseStats() {
+    try {
+      const res = await fetch('https://api.llama.fi/chains');
+      const data = await res.json();
+      const base = data.find(c => c.name.toLowerCase() === 'base');
+      if (!base) throw new Error();
+
+      const tvl = base.tvl ? "$" + Math.round(base.tvl).toLocaleString() : "N/A";
+      const bridges = base.bridgedTvl ? "$" + Math.round(base.bridgedTvl).toLocaleString() : "N/A";
+      const active = base.addresses ? base.addresses.toLocaleString() : "N/A";
+
+      const statsHTML = `
+        📊 TVL: ${tvl}<br>
+        🌉 Bridged TVL: ${bridges}<br>
+        👥 Active Wallets: ${active}
+      `;
+      document.getElementById('base-stats').innerHTML = statsHTML;
+    } catch (e) {
+      document.getElementById('base-stats').textContent = "Base chain stats unavailable.";
+    }
+  }
+
+  fetchBaseStats();
+  setInterval(fetchBaseStats, 60000);
+</script>
+</section><section>
+<div id="base-scanner" style="margin-top: 40px;">
+<h2>📡 BASE CHAIN SCANNER</h2>
+<div id="base-stats" style="font-size: 1.2em; line-height: 1.6em; color: #00FFEF;">
+      Loading Base network stats...
+    </div>
+</div>
+</section><section>
+<div id="blue-whale" style="margin-top: 30px;">
+<h2>🐋 BLUE WHALE WATCH</h2>
+<div id="whale-info" style="font-size: 1.2em; color: #00FFEF;">Scanning wallets...</div>
+</div>
+</section><footer style="text-align: center; margin-top: 60px; padding: 20px; font-size: 1em; color: #00BFFF;">Follow $BLUE: <a href="https://twitter.com/blueonbase" style="color: #00BFFF; margin: 0 12px; text-decoration: none;" target="_blank">Twitter</a><a href="https://t.me/BlueBlueBase" style="color: #00BFFF; margin: 0 12px; text-decoration: none;" target="_blank">Telegram (Official)</a><a href="https://dexscreener.com/base/0x03623367F4a833f23E8C917b3448DD31805E3D07" style="color: #00BFFF; margin: 0 12px; text-decoration: none;" target="_blank">Dexscreener</a><a href="https://basescan.org/token/0x03623367F4a833f23E8C917b3448DD31805E3D07" style="color: #00BFFF; margin: 0 12px; text-decoration: none;" target="_blank">BaseScan</a></footer></body>
 </html>
