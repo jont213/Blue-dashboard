@@ -93,7 +93,14 @@
   
 body { padding: 0 240px; }</style>
 </head>
-<body>
+<body><canvas id="cubeCanvas" style="
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+"></canvas>
 <div id="left-game" style="position: fixed; top: 120px; left: 0; width: 220px; background: rgba(0,0,0,0.85); color: #00BFFF; padding: 10px; height: calc(100% - 140px); overflow-y: auto; font-size: 0.9em; border-right: 2px solid #00BFFF; z-index: 10;"></div><div id="right-game" style="position: fixed; top: 120px; right: 0; width: 220px; background: rgba(0,0,0,0.85); color: #00BFFF; padding: 10px; height: calc(100% - 140px); overflow-y: auto; font-size: 0.9em; border-left: 2px solid #00BFFF; z-index: 10;"></div><canvas id="matrix"></canvas>
 <h1>$BLUE CASINO</h1>
 <div id="cap">Loading Market Cap...</div>
@@ -350,5 +357,55 @@ document.addEventListener("DOMContentLoaded", function () {
 <h2>🐋 BLUE WHALE WATCH</h2>
 <div id="whale-info" style="font-size: 1.2em; color: #00FFEF;">Scanning wallets...</div>
 </div>
-</section><footer style="text-align: center; margin-top: 60px; padding: 20px; font-size: 1em; color: #00BFFF;">Follow $BLUE: <a href="https://twitter.com/blueonbase" style="color: #00BFFF; margin: 0 12px; text-decoration: none;" target="_blank">Twitter</a><a href="https://t.me/BlueBlueBase" style="color: #00BFFF; margin: 0 12px; text-decoration: none;" target="_blank">Telegram (Official)</a><a href="https://dexscreener.com/base/0x03623367F4a833f23E8C917b3448DD31805E3D07" style="color: #00BFFF; margin: 0 12px; text-decoration: none;" target="_blank">Dexscreener</a><a href="https://basescan.org/token/0x03623367F4a833f23E8C917b3448DD31805E3D07" style="color: #00BFFF; margin: 0 12px; text-decoration: none;" target="_blank">BaseScan</a></footer></body>
+</section><footer style="text-align: center; margin-top: 60px; padding: 20px; font-size: 1em; color: #00BFFF;">Follow $BLUE: <a href="https://twitter.com/blueonbase" style="color: #00BFFF; margin: 0 12px; text-decoration: none;" target="_blank">Twitter</a><a href="https://t.me/BlueBlueBase" style="color: #00BFFF; margin: 0 12px; text-decoration: none;" target="_blank">Telegram (Official)</a><a href="https://dexscreener.com/base/0x03623367F4a833f23E8C917b3448DD31805E3D07" style="color: #00BFFF; margin: 0 12px; text-decoration: none;" target="_blank">Dexscreener</a><a href="https://basescan.org/token/0x03623367F4a833f23E8C917b3448DD31805E3D07" style="color: #00BFFF; margin: 0 12px; text-decoration: none;" target="_blank">BaseScan</a></footer><script>
+const canvas = document.getElementById("cubeCanvas");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const cubeCount = 50;
+const cubes = [];
+
+for (let i = 0; i < cubeCount; i++) {
+  cubes.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    size: 10 + Math.random() * 20,
+    speed: 1 + Math.random() * 3,
+    angle: Math.random() * 360
+  });
+}
+
+function drawCube(cube) {
+  ctx.save();
+  ctx.translate(cube.x, cube.y);
+  ctx.rotate((cube.angle * Math.PI) / 180);
+  ctx.fillStyle = "#0052FF";
+  ctx.fillRect(-cube.size / 2, -cube.size / 2, cube.size, cube.size);
+  ctx.restore();
+}
+
+function update() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  for (let cube of cubes) {
+    cube.y += cube.speed;
+    cube.angle += 1;
+    if (cube.y > canvas.height + cube.size) {
+      cube.y = -cube.size;
+      cube.x = Math.random() * canvas.width;
+    }
+    drawCube(cube);
+  }
+
+  requestAnimationFrame(update);
+}
+
+update();
+window.addEventListener("resize", () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+});
+</script></body>
 </html>
