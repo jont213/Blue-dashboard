@@ -1,18 +1,86 @@
 
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<title>$BLUE Dashboard</title>
+  <meta charset="UTF-8">
+  <title>$BLUE Casino</title>
+  <style>
+    body {
+      background-image: url('https://cdn.pixabay.com/photo/2017/08/03/01/50/casino-2574200_1280.jpg');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      background-position: center;
+      color: #00BFFF;
+      font-family: 'Courier New', monospace;
+      text-align: center;
+      padding-top: 100px;
+    }
+    #news-ticker {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(0,0,0,0.9);
+      color: #00BFFF;
+      font-size: 1em;
+      font-weight: bold;
+      padding: 8px 0;
+      z-index: 9999;
+      overflow: hidden;
+    }
+    #ticker-content {
+      display: inline-block;
+      white-space: nowrap;
+      animation: scroll-left 25s linear infinite;
+    }
+    @keyframes scroll-left {
+      0% { transform: translateX(100%); }
+      100% { transform: translateX(-100%); }
+    }
+    h1, h2 {
+      text-shadow: 0 0 8px #00BFFF;
+    }
+    button {
+      background: black;
+      color: #00BFFF;
+      padding: 10px 20px;
+      border: 2px solid #00BFFF;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    footer {
+      margin-top: 60px;
+      padding: 20px;
+      font-size: 1em;
+      background: rgba(0, 0, 0, 0.5);
+    }
+    footer a {
+      color: #00BFFF;
+      margin: 0 12px;
+      text-decoration: none;
+    }
+  </style>
 </head>
-<body><div id="news-ticker" style="position: fixed; top: 0; left: 0; width: 100%; background: rgba(0,0,0,0.95); color: #00BFFF; font-size: 1em; font-weight: bold; padding: 8px 0; z-index: 9999; overflow: hidden;"><div id="ticker-content" style="display: inline-block; white-space: nowrap; animation: scroll-left 25s linear infinite;">🚀 BLUE just flipped another base token | 🧼 Someone aped 6 ETH into $BLUE | 📈 Base chain user count rising | 💎 HODL or cry later | 🧵 Chart pattern: God Candle loading... | 🔄 Reloading blue vibes...</div></div>
-<footer style="text-align: center; margin-top: 60px; padding: 20px; font-size: 1em; color: #00BFFF;">
-    Follow $BLUE: 
-    <a href="https://twitter.com/blue_base_blue" style="color: #00BFFF; margin: 0 12px; text-decoration: none;">Twitter (X)</a>
-<a href="https://t.me/BlueBlueBase" style="color: #00BFFF; margin: 0 12px; text-decoration: none;">Telegram (Official)</a>
-<a href="https://dexscreener.com/base/0x03623367F4a833f23E8C917b3448DD31805E3D07" style="color: #00BFFF; margin: 0 12px; text-decoration: none;">Dexscreener</a>
-<a href="https://basescan.org/token/0x03623367F4a833f23E8C917b3448DD31805E3D07" style="color: #00BFFF; margin: 0 12px; text-decoration: none;">BaseScan</a>
-</footer>
+<body>
+  <div id="news-ticker">
+    <div id="ticker-content">
+      🚀 BLUE just flipped another base token | 🐳 Someone aped 6 ETH into $BLUE | 📈 Base chain user count rising | 💎 HODL or cry later | 🧵 Chart pattern: God Candle loading... | 🔄 Reloading blue vibes...
+    </div>
+  </div>
+
+  <h1>$BLUE CASINO</h1>
+  <h2>$74,490</h2>
+  <img src="https://upload.wikimedia.org/wikipedia/commons/3/34/Casino_Dice.png" alt="dice" width="80px">
+  <br><br>
+  <button>ROLL THE DICE</button>
+
+  <footer>
+    Follow $BLUE:
+    <a href="https://twitter.com/blue_base_blue" target="_blank">Twitter (X)</a>
+    <a href="https://t.me/BlueBlueBase" target="_blank">Telegram (Official)</a>
+    <a href="https://dexscreener.com/base/0x03623367F4a833f23E8C917b3448DD31805E3D07" target="_blank">Dexscreener</a>
+    <a href="https://basescan.org/token/0x03623367F4a833f23E8C917b3448DD31805E3D07" target="_blank">BaseScan</a>
+  </footer>
 </body>
 </html>
